@@ -81,7 +81,12 @@
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "blocked": { "type": "boolean", "const": true },
-        "author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" }
+        "author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" },
+
+        "social.zeppelin.value": {
+          "type": "unknown",
+          "description": "The record data itself."
+        }
       }
     },
     "viewDetached": {
@@ -89,7 +94,12 @@
       "required": ["uri", "detached"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
-        "detached": { "type": "boolean", "const": true }
+        "detached": { "type": "boolean", "const": true },
+
+        "social.zeppelin.value": {
+          "type": "unknown",
+          "description": "The record data itself."
+        }
       }
     }
   }
