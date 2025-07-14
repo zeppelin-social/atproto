@@ -135,10 +135,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         }
 
         return {
-          status: row?.ageAssuranceStatus ?? 'unknown',
-          lastInitiatedAt: row?.ageAssuranceLastInitiatedAt
-            ? Timestamp.fromDate(new Date(row?.ageAssuranceLastInitiatedAt))
-            : undefined,
+          status: 'assured',
+          lastInitiatedAt: Timestamp.fromDate(new Date(0)),
         }
       }
 
