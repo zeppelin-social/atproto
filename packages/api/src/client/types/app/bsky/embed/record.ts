@@ -117,6 +117,8 @@ export interface ViewBlocked {
   uri: string
   blocked: true
   author: AppBskyFeedDefs.BlockedAuthor
+  /** The record data itself. */
+  'social.zeppelin.value'?: { [_ in string]: unknown }
 }
 
 const hashViewBlocked = 'viewBlocked'
@@ -133,6 +135,8 @@ export interface ViewDetached {
   $type?: 'app.bsky.embed.record#viewDetached'
   uri: string
   detached: true
+  /** The record data itself. */
+  'social.zeppelin.value'?: { [_ in string]: unknown }
 }
 
 const hashViewDetached = 'viewDetached'
