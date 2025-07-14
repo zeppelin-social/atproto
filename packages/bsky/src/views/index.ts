@@ -1990,16 +1990,22 @@ export class Views {
     }
   }
 
-  embedDetached(uri: string): {
+  embedDetached(
+    uri: string,
+    state: HydrationState,
+    depth: number,
+  ): {
     $type: 'app.bsky.embed.record#view'
     record: $Typed<EmbedDetached>
   } {
+    const postView = this.post(uri, state, depth)
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
         $type: 'app.bsky.embed.record#viewDetached',
         uri,
         detached: true,
+        'social.zeppelin.value': postView,
       },
     }
   }
@@ -2007,11 +2013,13 @@ export class Views {
   embedBlocked(
     uri: string,
     state: HydrationState,
+    depth: number,
   ): {
     $type: 'app.bsky.embed.record#view'
     record: $Typed<EmbedBlocked>
   } {
     const creator = creatorFromUri(uri)
+    const postView = this.post(uri, state, depth)
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
@@ -2022,6 +2030,7 @@ export class Views {
           did: creator,
           viewer: this.blockedProfileViewer(creator, state),
         },
+        'social.zeppelin.value': postView,
       },
     }
   }
@@ -2076,7 +2085,7 @@ export class Views {
       this.viewerBlockExists(parsedUri.hostname, state) ||
       (!state.ctx?.include3pBlocks && state.postBlocks?.get(postUri)?.embed)
     ) {
-      return this.embedBlocked(uri, state)
+      return this.embedBlocked(uri, state, depth)
     }
 
     if (parsedUri.collection === ids.AppBskyFeedPost) {
