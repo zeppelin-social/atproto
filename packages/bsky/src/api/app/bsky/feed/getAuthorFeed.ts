@@ -144,33 +144,10 @@ const noBlocksOrMutedReposts = (inputs: {
   hydration: HydrationState
 }): Skeleton => {
   const { ctx, skeleton, hydration } = inputs
-  const relationship = hydration.profileViewers?.get(skeleton.actor.did)
-  if (
-    relationship &&
-    (relationship.blocking || ctx.views.blockingByList(relationship, hydration))
-  ) {
-    throw new InvalidRequestError(
-      `Requester has blocked actor: ${skeleton.actor.did}`,
-      'BlockedActor',
-    )
-  }
-  if (
-    relationship &&
-    (relationship.blockedBy || ctx.views.blockedByList(relationship, hydration))
-  ) {
-    throw new InvalidRequestError(
-      `Requester is blocked by actor: ${skeleton.actor.did}`,
-      'BlockedByActor',
-    )
-  }
 
-  const checkBlocksAndMutes = (item: FeedItem) => {
+  const checkMutes = (item: FeedItem) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
-    return (
-      !bam.authorBlocked &&
-      !bam.originatorBlocked &&
-      (!bam.authorMuted || bam.originatorMuted) // repost of muted content
-    )
+    return !bam.authorMuted || bam.originatorMuted // repost of muted content
   }
 
   if (skeleton.filter === 'posts_and_author_threads') {
@@ -179,12 +156,12 @@ const noBlocksOrMutedReposts = (inputs: {
     const selfThread = new SelfThreadTracker(skeleton.items, hydration)
     skeleton.items = skeleton.items.filter((item) => {
       return (
-        checkBlocksAndMutes(item) &&
+        checkMutes(item) &&
         (item.repost || item.authorPinned || selfThread.ok(item.post.uri))
       )
     })
   } else {
-    skeleton.items = skeleton.items.filter(checkBlocksAndMutes)
+    skeleton.items = skeleton.items.filter(checkMutes)
   }
 
   return skeleton

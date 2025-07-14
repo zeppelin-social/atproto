@@ -187,6 +187,7 @@ export function validateThreadItemNotFound<V>(v: V) {
 export interface ThreadItemBlocked {
   $type?: 'app.bsky.unspecced.defs#threadItemBlocked'
   author: AppBskyFeedDefs.BlockedAuthor
+  'social.zeppelin.post': AppBskyFeedDefs.PostView
 }
 
 const hashThreadItemBlocked = 'threadItemBlocked'

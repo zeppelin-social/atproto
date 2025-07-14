@@ -1266,6 +1266,7 @@ export class Views {
             uri: anchorUri,
             depth: 0,
             authorDid: postView.author.did,
+            postView,
             state,
           }),
         ],
@@ -1281,22 +1282,19 @@ export class Views {
     const opDid = uriToDid(rootUri)
     const authorDid = postView.author.did
     const isOPPost = authorDid === opDid
-    const anchorViolatesThreadGate = post.violatesThreadGate
 
     // Builds the parent tree, and whether it is a contiguous OP thread.
-    const parentTree = !anchorViolatesThreadGate
-      ? this.threadV2Parent(
-          {
-            childUri: anchorUri,
-            opDid,
-            rootUri,
+    const parentTree = this.threadV2Parent(
+      {
+        childUri: anchorUri,
+        opDid,
+        rootUri,
 
-            above,
-            depth: -1,
-          },
-          state,
-        )
-      : undefined
+        above,
+        depth: -1,
+      },
+      state,
+    )
 
     const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
       parentTree ?? { tree: undefined, isOPThread: false }
@@ -1306,52 +1304,35 @@ export class Views {
       : isOPPost
 
     const anchorDepth = 0 // The depth of the anchor post is always 0.
-    let anchorTree: ThreadTree
-    let hasOtherReplies = false
 
-    if (this.noUnauthenticatedPost(state, postView)) {
-      anchorTree = {
-        type: 'noUnauthenticated',
-        item: this.threadV2ItemNoUnauthenticated({
-          uri: anchorUri,
-          depth: anchorDepth,
-        }),
-        parent,
-      }
-    } else {
-      const { replies, hasOtherReplies: hasOtherRepliesShadow } =
-        !anchorViolatesThreadGate
-          ? this.threadV2Replies(
-              {
-                parentUri: anchorUri,
-                isOPThread,
-                opDid,
-                rootUri,
-                childrenByParentUri,
-                below,
-                depth: 1,
-                branchingFactor,
-                prioritizeFollowedUsers,
-              },
-              state,
-            )
-          : { replies: undefined, hasOtherReplies: false }
-      hasOtherReplies = hasOtherRepliesShadow
+    const { replies, hasOtherReplies } = this.threadV2Replies(
+      {
+        parentUri: anchorUri,
+        isOPThread,
+        opDid,
+        rootUri,
+        childrenByParentUri,
+        below,
+        depth: 1,
+        branchingFactor,
+        prioritizeFollowedUsers,
+      },
+      state,
+    )
 
-      anchorTree = {
-        type: 'post',
-        item: this.threadV2ItemPost({
-          depth: anchorDepth,
-          isOPThread,
-          postView,
-          repliesAllowance: Infinity, // While we don't have pagination.
-          uri: anchorUri,
-        }),
-        tags: post.tags,
-        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-        parent,
-        replies,
-      }
+    const anchorTree: ThreadTree = {
+      type: 'post',
+      item: this.threadV2ItemPost({
+        depth: anchorDepth,
+        isOPThread,
+        postView,
+        repliesAllowance: Infinity, // While we don't have pagination.
+        uri: anchorUri,
+      }),
+      tags: post.tags,
+      hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+      parent,
+      replies,
     }
 
     const thread = sortTrimFlattenThreadTree(anchorTree, {
@@ -1412,12 +1393,10 @@ export class Views {
       return undefined
     }
 
-    // Blocked (1p and 3p for parent).
+    // Blocked (1p [no 3p] for parent).
     const authorDid = postView.author.did
     const has1pBlock = this.viewerBlockExists(authorDid, state)
-    const has3pBlock =
-      !state.ctx?.include3pBlocks && state.postBlocks?.get(childUri)?.parent
-    if (has1pBlock || has3pBlock) {
+    if (has1pBlock) {
       return {
         tree: {
           type: 'blocked',
@@ -1425,6 +1404,7 @@ export class Views {
             uri,
             depth,
             authorDid,
+            postView,
             state,
           }),
         },
@@ -1450,20 +1430,6 @@ export class Views {
     const isOPThread = parent
       ? isOPThreadFromRootToParent && isOPPost
       : isOPPost
-
-    if (this.noUnauthenticatedPost(state, postView)) {
-      return {
-        tree: {
-          type: 'noUnauthenticated',
-          item: this.threadV2ItemNoUnauthenticated({
-            uri,
-            depth,
-          }),
-          parent,
-        },
-        isOPThread,
-      }
-    }
 
     const parentUri = post.record.reply?.parent.uri
     const hasMoreParents = !!parentUri && !parent
@@ -1657,11 +1623,13 @@ export class Views {
     uri,
     depth,
     authorDid,
+    postView,
     state,
   }: {
     uri: string
     depth: number
     authorDid: string
+    postView: PostView
     state: HydrationState
   }): ThreadItemValueBlocked {
     return {
@@ -1673,6 +1641,7 @@ export class Views {
           did: authorDid,
           viewer: this.blockedProfileViewer(authorDid, state),
         },
+        'social.zeppelin.post': postView,
       },
     }
   }
@@ -1880,11 +1849,11 @@ export class Views {
   } | null {
     // Not found.
     const post = state.posts?.get(uri)
-    if (post?.violatesThreadGate) {
+    if (!post) {
       return null
     }
     const postView = this.post(uri, state)
-    if (!post || !postView) {
+    if (!postView) {
       return null
     }
     const authorDid = postView.author.did
@@ -1893,19 +1862,12 @@ export class Views {
       return null
     }
 
-    // Blocked (1p and 3p for replies).
+    // Blocked (1p [no 3p] for replies).
     const has1pBlock = this.viewerBlockExists(authorDid, state)
-    const has3pBlock =
-      !state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent
-    if (has1pBlock || has3pBlock) {
+    if (has1pBlock) {
       return null
     }
     if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
-      return null
-    }
-
-    // No unauthenticated.
-    if (this.noUnauthenticatedPost(state, postView)) {
       return null
     }
 
@@ -1945,8 +1907,9 @@ export class Views {
       this.threadTagsHide.some((t) => post.tags.has(t))
 
     const hiddenByThreadgate =
-      state.ctx?.viewer !== authorDid &&
-      this.replyIsHiddenByThreadgate(uri, rootUri, state)
+      post.violatesThreadGate ||
+      (state.ctx?.viewer !== authorDid &&
+        this.replyIsHiddenByThreadgate(uri, rootUri, state))
 
     const mutedByViewer = this.viewerMuteExists(authorDid, state)
 
@@ -2068,16 +2031,22 @@ export class Views {
     }
   }
 
-  embedDetached(uri: string): {
+  embedDetached(
+    uri: string,
+    state: HydrationState,
+    depth: number,
+  ): {
     $type: 'app.bsky.embed.record#view'
     record: $Typed<EmbedDetached>
   } {
+    const postView = this.post(uri, state, depth)
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
         $type: 'app.bsky.embed.record#viewDetached',
         uri,
         detached: true,
+        'social.zeppelin.value': postView,
       },
     }
   }
@@ -2085,11 +2054,13 @@ export class Views {
   embedBlocked(
     uri: string,
     state: HydrationState,
+    depth: number,
   ): {
     $type: 'app.bsky.embed.record#view'
     record: $Typed<EmbedBlocked>
   } {
     const creator = creatorFromUri(uri)
+    const postView = this.post(uri, state, depth)
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
@@ -2100,6 +2071,7 @@ export class Views {
           did: creator,
           viewer: this.blockedProfileViewer(creator, state),
         },
+        'social.zeppelin.value': postView,
       },
     }
   }
@@ -2154,7 +2126,7 @@ export class Views {
       this.viewerBlockExists(parsedUri.hostname, state) ||
       (!state.ctx?.include3pBlocks && state.postBlocks?.get(postUri)?.embed)
     ) {
-      return this.embedBlocked(uri, state)
+      return this.embedBlocked(uri, state, depth)
     }
 
     if (parsedUri.collection === ids.AppBskyFeedPost) {
