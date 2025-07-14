@@ -1266,52 +1266,40 @@ export class Views {
       : isOPPost
 
     const anchorDepth = 0 // The depth of the anchor post is always 0.
-    let anchorTree: ThreadTree
     let hasOtherReplies = false
 
-    if (this.noUnauthenticatedPost(state, postView)) {
-      anchorTree = {
-        type: 'noUnauthenticated',
-        item: this.threadV2ItemNoUnauthenticated({
-          uri: anchorUri,
-          depth: anchorDepth,
-        }),
-        parent,
-      }
-    } else {
-      const { replies, hasOtherReplies: hasOtherRepliesShadow } =
-        !anchorViolatesThreadGate
-          ? this.threadV2Replies(
-              {
-                parentUri: anchorUri,
-                isOPThread,
-                opDid,
-                rootUri,
-                childrenByParentUri,
-                below,
-                depth: 1,
-                branchingFactor,
-                prioritizeFollowedUsers,
-              },
-              state,
-            )
-          : { replies: undefined, hasOtherReplies: false }
-      hasOtherReplies = hasOtherRepliesShadow
+    const { replies, hasOtherReplies: hasOtherRepliesShadow } =
+      !anchorViolatesThreadGate
+        ? this.threadV2Replies(
+            {
+              parentUri: anchorUri,
+              isOPThread,
+              opDid,
+              rootUri,
+              childrenByParentUri,
+              below,
+              depth: 1,
+              branchingFactor,
+              prioritizeFollowedUsers,
+            },
+            state,
+          )
+        : { replies: undefined, hasOtherReplies: false }
+    hasOtherReplies = hasOtherRepliesShadow
 
-      anchorTree = {
-        type: 'post',
-        item: this.threadV2ItemPost({
-          depth: anchorDepth,
-          isOPThread,
-          postView,
-          repliesAllowance: Infinity, // While we don't have pagination.
-          uri: anchorUri,
-        }),
-        tags: post.tags,
-        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-        parent,
-        replies,
-      }
+    const anchorTree: ThreadTree = {
+      type: 'post',
+      item: this.threadV2ItemPost({
+        depth: anchorDepth,
+        isOPThread,
+        postView,
+        repliesAllowance: Infinity, // While we don't have pagination.
+        uri: anchorUri,
+      }),
+      tags: post.tags,
+      hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+      parent,
+      replies,
     }
 
     const thread = sortTrimFlattenThreadTree(anchorTree, {
@@ -1409,20 +1397,6 @@ export class Views {
     const isOPThread = parent
       ? isOPThreadFromRootToParent && isOPPost
       : isOPPost
-
-    if (this.noUnauthenticatedPost(state, postView)) {
-      return {
-        tree: {
-          type: 'noUnauthenticated',
-          item: this.threadV2ItemNoUnauthenticated({
-            uri,
-            depth,
-          }),
-          parent,
-        },
-        isOPThread,
-      }
-    }
 
     const parentUri = post.record.reply?.parent.uri
     const hasMoreParents = !!parentUri && !parent
@@ -1861,11 +1835,6 @@ export class Views {
       return null
     }
     if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
-      return null
-    }
-
-    // No unauthenticated.
-    if (this.noUnauthenticatedPost(state, postView)) {
       return null
     }
 
