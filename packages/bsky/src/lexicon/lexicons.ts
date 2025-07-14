@@ -5992,6 +5992,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#blockedAuthor',
           },
+          'social.zeppelin.value': {
+            type: 'unknown',
+            description: 'The record data itself.',
+          },
         },
       },
       viewDetached: {
@@ -6005,6 +6009,10 @@ export const schemaDict = {
           detached: {
             type: 'boolean',
             const: true,
+          },
+          'social.zeppelin.value': {
+            type: 'unknown',
+            description: 'The record data itself.',
           },
         },
       },
@@ -10701,11 +10709,15 @@ export const schemaDict = {
       },
       threadItemBlocked: {
         type: 'object',
-        required: ['author'],
+        required: ['author', 'social.zeppelin.post'],
         properties: {
           author: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+          'social.zeppelin.post': {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
           },
         },
       },
