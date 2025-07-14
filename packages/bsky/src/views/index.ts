@@ -1616,11 +1616,13 @@ export class Views {
     uri,
     depth,
     authorDid,
+    postView,
     state,
   }: {
     uri: string
     depth: number
     authorDid: string
+    postView: PostView
     state: HydrationState
   }): ThreadItemValueBlocked {
     return {
@@ -1631,6 +1633,7 @@ export class Views {
         author: {
           did: authorDid,
           viewer: this.blockedProfileViewer(authorDid, state),
+          'social.zeppelin.labels': postView.author.labels ?? [],
         },
       },
     }
