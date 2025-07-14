@@ -1225,6 +1225,7 @@ export class Views {
             uri: anchorUri,
             depth: 0,
             authorDid: postView.author.did,
+            postView,
             state,
           }),
         ],
@@ -1371,12 +1372,10 @@ export class Views {
       return undefined
     }
 
-    // Blocked (1p and 3p for parent).
+    // Blocked (1p [no 3p] for parent).
     const authorDid = postView.author.did
     const has1pBlock = this.viewerBlockExists(authorDid, state)
-    const has3pBlock =
-      !state.ctx?.include3pBlocks && state.postBlocks?.get(childUri)?.parent
-    if (has1pBlock || has3pBlock) {
+    if (has1pBlock) {
       return {
         tree: {
           type: 'blocked',
@@ -1384,6 +1383,7 @@ export class Views {
             uri,
             depth,
             authorDid,
+            postView,
             state,
           }),
         },
@@ -1633,8 +1633,8 @@ export class Views {
         author: {
           did: authorDid,
           viewer: this.blockedProfileViewer(authorDid, state),
-          'social.zeppelin.labels': postView.author.labels ?? [],
         },
+        'social.zeppelin.post': postView,
       },
     }
   }
@@ -1855,11 +1855,9 @@ export class Views {
       return null
     }
 
-    // Blocked (1p and 3p for replies).
+    // Blocked (1p [no 3p] for replies).
     const has1pBlock = this.viewerBlockExists(authorDid, state)
-    const has3pBlock =
-      !state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent
-    if (has1pBlock || has3pBlock) {
+    if (has1pBlock) {
       return null
     }
     if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
