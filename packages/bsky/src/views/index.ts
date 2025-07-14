@@ -1241,22 +1241,19 @@ export class Views {
     const opDid = uriToDid(rootUri)
     const authorDid = postView.author.did
     const isOPPost = authorDid === opDid
-    const anchorViolatesThreadGate = post.violatesThreadGate
 
     // Builds the parent tree, and whether it is a contiguous OP thread.
-    const parentTree = !anchorViolatesThreadGate
-      ? this.threadV2Parent(
-          {
-            childUri: anchorUri,
-            opDid,
-            rootUri,
+    const parentTree = this.threadV2Parent(
+      {
+        childUri: anchorUri,
+        opDid,
+        rootUri,
 
-            above,
-            depth: -1,
-          },
-          state,
-        )
-      : undefined
+        above,
+        depth: -1,
+      },
+      state,
+    )
 
     const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
       parentTree ?? { tree: undefined, isOPThread: false }
@@ -1266,26 +1263,21 @@ export class Views {
       : isOPPost
 
     const anchorDepth = 0 // The depth of the anchor post is always 0.
-    let hasOtherReplies = false
 
-    const { replies, hasOtherReplies: hasOtherRepliesShadow } =
-      !anchorViolatesThreadGate
-        ? this.threadV2Replies(
-            {
-              parentUri: anchorUri,
-              isOPThread,
-              opDid,
-              rootUri,
-              childrenByParentUri,
-              below,
-              depth: 1,
-              branchingFactor,
-              prioritizeFollowedUsers,
-            },
-            state,
-          )
-        : { replies: undefined, hasOtherReplies: false }
-    hasOtherReplies = hasOtherRepliesShadow
+    const { replies, hasOtherReplies } = this.threadV2Replies(
+      {
+        parentUri: anchorUri,
+        isOPThread,
+        opDid,
+        rootUri,
+        childrenByParentUri,
+        below,
+        depth: 1,
+        branchingFactor,
+        prioritizeFollowedUsers,
+      },
+      state,
+    )
 
     const anchorTree: ThreadTree = {
       type: 'post',
@@ -1816,11 +1808,11 @@ export class Views {
   } | null {
     // Not found.
     const post = state.posts?.get(uri)
-    if (post?.violatesThreadGate) {
+    if (!post) {
       return null
     }
     const postView = this.post(uri, state)
-    if (!post || !postView) {
+    if (!postView) {
       return null
     }
     const authorDid = postView.author.did
@@ -1874,8 +1866,9 @@ export class Views {
       this.threadTagsHide.some((t) => post.tags.has(t))
 
     const hiddenByThreadgate =
-      state.ctx?.viewer !== authorDid &&
-      this.replyIsHiddenByThreadgate(uri, rootUri, state)
+      post.violatesThreadGate ||
+      (state.ctx?.viewer !== authorDid &&
+        this.replyIsHiddenByThreadgate(uri, rootUri, state))
 
     const mutedByViewer = this.viewerMuteExists(authorDid, state)
 
