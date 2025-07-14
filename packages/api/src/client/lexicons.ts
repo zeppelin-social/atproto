@@ -10701,11 +10701,15 @@ export const schemaDict = {
       },
       threadItemBlocked: {
         type: 'object',
-        required: ['author'],
+        required: ['author', 'social.zeppelin.post'],
         properties: {
           author: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+          'social.zeppelin.post': {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
           },
         },
       },
