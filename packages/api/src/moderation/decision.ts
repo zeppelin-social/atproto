@@ -91,7 +91,6 @@ export class ModerationDecision {
         }
         if (!cause.downgraded) {
           if (BLOCK_BEHAVIOR[context] === 'blur') {
-            ui.noOverride = true
             ui.blurs.push(cause)
           } else if (BLOCK_BEHAVIOR[context] === 'alert') {
             ui.alerts.push(cause)
