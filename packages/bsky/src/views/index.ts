@@ -1263,39 +1263,37 @@ export class Views {
       state,
     )
 
-    // Blocked (only 1p for anchor).
-    if (this.viewerBlockExists(postView.author.did, state)) {
-      return {
-        hasOtherReplies: false,
-        thread: [
-          this.threadV2ItemBlocked({
+    const blockExists = this.viewerBlockExists(postView.author.did, state)
+    const anchorTree: ThreadTree = blockExists
+      ? {
+          type: 'blocked',
+          item: this.threadV2ItemBlocked({
             uri: anchorUri,
-            depth: 0,
+            depth: anchorDepth,
             isOPThread,
-            moreParents: false,
             repliesAllowance: Infinity, // While we don't have pagination.
             authorDid: postView.author.did,
             postView,
             state,
           }),
-        ],
-      }
-    }
-
-    const anchorTree: ThreadTree = {
-      type: 'post',
-      item: this.threadV2ItemPost({
-        depth: anchorDepth,
-        isOPThread,
-        postView,
-        repliesAllowance: Infinity, // While we don't have pagination.
-        uri: anchorUri,
-      }),
-      tags: post.tags,
-      hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-      parent,
-      replies,
-    }
+          tags: post.tags,
+          parent,
+          replies,
+        }
+      : {
+          type: 'post',
+          item: this.threadV2ItemPost({
+            depth: anchorDepth,
+            isOPThread,
+            postView,
+            repliesAllowance: Infinity, // While we don't have pagination.
+            uri: anchorUri,
+          }),
+          tags: post.tags,
+          hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+          parent,
+          replies,
+        }
 
     const thread = sortTrimFlattenThreadTree(anchorTree, {
       opDid,
