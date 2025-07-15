@@ -1248,20 +1248,38 @@ export class Views {
 
     const anchorDepth = 0 // The depth of the anchor post is always 0.
 
-    const { replies, hasOtherReplies } = this.threadV2Replies(
-      {
-        parentUri: anchorUri,
-        isOPThread,
-        opDid,
-        rootUri,
-        childrenByParentUri,
-        below,
-        depth: 1,
-        branchingFactor,
-        prioritizeFollowedUsers,
-      },
-      state,
-    )
+    let {
+      replies,
+      hasOtherReplies,
+    }: { replies: ThreadTree[] | undefined; hasOtherReplies: boolean } =
+      this.threadV2Replies(
+        {
+          parentUri: anchorUri,
+          isOPThread,
+          opDid,
+          rootUri,
+          childrenByParentUri,
+          below,
+          depth: 1,
+          branchingFactor,
+          prioritizeFollowedUsers,
+        },
+        state,
+      )
+
+    if (!replies?.length && hasOtherReplies) {
+      replies = this.threadOtherV2Replies(
+        {
+          parentUri: anchorUri,
+          rootUri,
+          childrenByParentUri,
+          below,
+          depth: 1,
+          prioritizeFollowedUsers,
+        },
+        state,
+      )
+    }
 
     const blockExists = this.viewerBlockExists(postView.author.did, state)
     const anchorTree: ThreadTree = blockExists
