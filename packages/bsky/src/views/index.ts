@@ -1649,11 +1649,6 @@ export class Views {
       return []
     }
 
-    // Blocked (only 1p for anchor).
-    if (this.viewerBlockExists(postView.author.did, state)) {
-      return []
-    }
-
     const childrenByParentUri = this.groupThreadChildrenByParent(
       anchorUri,
       uris,
@@ -1842,12 +1837,6 @@ export class Views {
       // outside thread boundary
       return null
     }
-
-    // Blocked (1p [no 3p] for replies).
-    const has1pBlock = this.viewerBlockExists(authorDid, state)
-    if (has1pBlock) {
-      return null
-    }
     if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
       return null
     }
@@ -1892,10 +1881,12 @@ export class Views {
       (state.ctx?.viewer !== authorDid &&
         this.replyIsHiddenByThreadgate(uri, rootUri, state))
 
+    const has1pBlock = this.viewerBlockExists(authorDid, state)
+
     const mutedByViewer = this.viewerMuteExists(authorDid, state)
 
     return {
-      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer,
+      isOther: hiddenByTag || hiddenByThreadgate || has1pBlock || mutedByViewer,
       hiddenByTag,
       hiddenByThreadgate,
       mutedByViewer,
