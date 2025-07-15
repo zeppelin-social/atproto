@@ -1216,22 +1216,6 @@ export class Views {
       }
     }
 
-    // Blocked (only 1p for anchor).
-    if (this.viewerBlockExists(postView.author.did, state)) {
-      return {
-        hasOtherReplies: false,
-        thread: [
-          this.threadV2ItemBlocked({
-            uri: anchorUri,
-            depth: 0,
-            authorDid: postView.author.did,
-            postView,
-            state,
-          }),
-        ],
-      }
-    }
-
     const childrenByParentUri = this.groupThreadChildrenByParent(
       anchorUri,
       uris,
@@ -1278,6 +1262,25 @@ export class Views {
       },
       state,
     )
+
+    // Blocked (only 1p for anchor).
+    if (this.viewerBlockExists(postView.author.did, state)) {
+      return {
+        hasOtherReplies: false,
+        thread: [
+          this.threadV2ItemBlocked({
+            uri: anchorUri,
+            depth: 0,
+            isOPThread,
+            moreParents: false,
+            repliesAllowance: Infinity, // While we don't have pagination.
+            authorDid: postView.author.did,
+            postView,
+            state,
+          }),
+        ],
+      }
+    }
 
     const anchorTree: ThreadTree = {
       type: 'post',
@@ -1352,25 +1355,6 @@ export class Views {
       return undefined
     }
 
-    // Blocked (1p [no 3p] for parent).
-    const authorDid = postView.author.did
-    const has1pBlock = this.viewerBlockExists(authorDid, state)
-    if (has1pBlock) {
-      return {
-        tree: {
-          type: 'blocked',
-          item: this.threadV2ItemBlocked({
-            uri,
-            depth,
-            authorDid,
-            postView,
-            state,
-          }),
-        },
-        isOPThread: false,
-      }
-    }
-
     // Recurse up.
     const parentTree = this.threadV2Parent(
       {
@@ -1385,6 +1369,7 @@ export class Views {
     const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
       parentTree ?? { tree: undefined, isOPThread: false }
 
+    const authorDid = postView.author.did
     const isOPPost = authorDid === opDid
     const isOPThread = parent
       ? isOPThreadFromRootToParent && isOPPost
@@ -1392,6 +1377,29 @@ export class Views {
 
     const parentUri = post.record.reply?.parent.uri
     const hasMoreParents = !!parentUri && !parent
+
+    // Blocked (1p [no 3p] for parent).
+    const has1pBlock = this.viewerBlockExists(authorDid, state)
+    if (has1pBlock) {
+      return {
+        tree: {
+          type: 'blocked',
+          item: this.threadV2ItemBlocked({
+            uri,
+            depth,
+            isOPThread,
+            moreParents: hasMoreParents,
+            authorDid,
+            postView,
+            state,
+          }),
+          tags: post.tags,
+          parent,
+          replies: undefined,
+        },
+        isOPThread,
+      }
+    }
 
     return {
       tree: {
@@ -1581,16 +1589,27 @@ export class Views {
   private threadV2ItemBlocked({
     uri,
     depth,
+    isOPThread,
+    moreParents,
     authorDid,
     postView,
+    repliesAllowance,
     state,
   }: {
     uri: string
     depth: number
+    isOPThread: boolean
+    moreParents?: boolean
     authorDid: string
     postView: PostView
+    repliesAllowance?: number
     state: HydrationState
   }): ThreadItemValueBlocked {
+    const moreReplies =
+      repliesAllowance === undefined
+        ? 0
+        : Math.max((postView.replyCount ?? 0) - repliesAllowance, 0)
+
     return {
       uri,
       depth,
@@ -1601,6 +1620,11 @@ export class Views {
           viewer: this.blockedProfileViewer(authorDid, state),
         },
         'social.zeppelin.post': postView,
+        'social.zeppelin.moreParents': moreParents ?? false,
+        'social.zeppelin.moreReplies': moreReplies,
+        'social.zeppelin.opThread': isOPThread,
+        'social.zeppelin.hiddenByThreadgate': false, // Hidden posts are handled by threadOtherV2
+        'social.zeppelin.mutedByViewer': false, // Hidden posts are handled by threadOtherV2
       },
     }
   }
