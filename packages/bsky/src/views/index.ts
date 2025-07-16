@@ -2027,17 +2027,19 @@ export class Views {
     uri: string,
     state: HydrationState,
     depth: number,
-  ): {
-    $type: 'app.bsky.embed.record#view'
-    record: $Typed<EmbedBlocked> | undefined
-  } {
+  ):
+    | {
+        $type: 'app.bsky.embed.record#view'
+        record: $Typed<EmbedBlocked>
+      }
+    | undefined {
     const postView = this.post(uri, state, depth)
     const creator = creatorFromUri(uri)
-    return {
-      $type: 'app.bsky.embed.record#view',
-      record: !postView
-        ? undefined
-        : {
+    return !postView
+      ? undefined
+      : {
+          $type: 'app.bsky.embed.record#view',
+          record: {
             $type: 'app.bsky.embed.record#viewBlocked',
             uri,
             blocked: true,
@@ -2051,7 +2053,7 @@ export class Views {
             'social.zeppelin.value': postView,
             'social.zeppelin.indexedAt': postView.indexedAt,
           },
-    }
+        }
   }
 
   embedPostView(
@@ -2104,7 +2106,9 @@ export class Views {
       this.viewerBlockExists(parsedUri.hostname, state) ||
       (!state.ctx?.include3pBlocks && state.postBlocks?.get(postUri)?.embed)
     ) {
-      return this.embedBlocked(uri, state, depth)
+      const view = this.embedBlocked(uri, state, depth)
+      if (!view) return this.embedNotFound(uri)
+      return view
     }
 
     if (parsedUri.collection === ids.AppBskyFeedPost) {
