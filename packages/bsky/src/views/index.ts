@@ -2045,8 +2045,11 @@ export class Views {
               did: creator,
               viewer: this.blockedProfileViewer(creator, state),
             },
-            'social.zeppelin.value': postView,
+
+            'social.zeppelin.cid': postView.cid,
             'social.zeppelin.author': postView.author,
+            'social.zeppelin.value': postView,
+            'social.zeppelin.indexedAt': postView.indexedAt,
           },
     }
   }

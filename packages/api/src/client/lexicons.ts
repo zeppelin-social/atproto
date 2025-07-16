@@ -5982,8 +5982,10 @@ export const schemaDict = {
           'uri',
           'blocked',
           'author',
-          'social.zeppelin.value',
+          'social.zeppelin.cid',
           'social.zeppelin.author',
+          'social.zeppelin.value',
+          'social.zeppelin.indexedAt',
         ],
         properties: {
           uri: {
@@ -5998,13 +6000,21 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#blockedAuthor',
           },
-          'social.zeppelin.value': {
-            type: 'unknown',
-            description: 'The record data itself.',
+          'social.zeppelin.cid': {
+            type: 'string',
+            format: 'cid',
           },
           'social.zeppelin.author': {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
+          'social.zeppelin.value': {
+            type: 'unknown',
+            description: 'The record data itself.',
+          },
+          'social.zeppelin.indexedAt': {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
