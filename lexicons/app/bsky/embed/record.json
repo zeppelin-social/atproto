@@ -77,16 +77,30 @@
     },
     "viewBlocked": {
       "type": "object",
-      "required": ["uri", "blocked", "author"],
+      "required": [
+        "uri",
+        "blocked",
+        "author",
+        "social.zeppelin.cid",
+        "social.zeppelin.author",
+        "social.zeppelin.value",
+        "social.zeppelin.indexedAt"
+      ],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "blocked": { "type": "boolean", "const": true },
         "author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" },
 
+        "social.zeppelin.cid": { "type": "string", "format": "cid" },
+        "social.zeppelin.author": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic"
+        },
         "social.zeppelin.value": {
           "type": "unknown",
           "description": "The record data itself."
-        }
+        },
+        "social.zeppelin.indexedAt": { "type": "string", "format": "datetime" }
       }
     },
     "viewDetached": {

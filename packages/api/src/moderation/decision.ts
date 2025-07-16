@@ -144,7 +144,10 @@ export class ModerationDecision {
             ui.informs.push(cause)
           }
         }
-      } else if (cause.type === 'label') {
+      } else if (
+        cause.type === 'label' &&
+        cause.label.val !== 'no-unauthenticated'
+      ) {
         if (context === 'profileList' && cause.target === 'account') {
           if (cause.setting === 'hide' && !this.isMe) {
             ui.filters.push(cause)

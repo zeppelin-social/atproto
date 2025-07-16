@@ -42,6 +42,9 @@ export type ThreadItemValuePost = ThreadItemValue<$Typed<ThreadItemPost>>
 type ThreadBlockedNode = {
   type: 'blocked'
   item: ThreadItemValueBlocked
+  tags: Set<string>
+  parent: ThreadTree | undefined
+  replies: ThreadTree[] | undefined
 }
 type ThreadNoUnauthenticatedNode = {
   type: 'noUnauthenticated'
@@ -349,7 +352,7 @@ function* flattenInDirection({
     }
   }
 
-  if (tree.type === 'post') {
+  if (tree.type === 'post' || tree.type === 'blocked') {
     if (direction === 'up') {
       if (tree.parent) {
         // Unfold all parents above.

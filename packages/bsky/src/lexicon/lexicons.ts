@@ -5978,7 +5978,15 @@ export const schemaDict = {
       },
       viewBlocked: {
         type: 'object',
-        required: ['uri', 'blocked', 'author'],
+        required: [
+          'uri',
+          'blocked',
+          'author',
+          'social.zeppelin.cid',
+          'social.zeppelin.author',
+          'social.zeppelin.value',
+          'social.zeppelin.indexedAt',
+        ],
         properties: {
           uri: {
             type: 'string',
@@ -5992,9 +6000,21 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#blockedAuthor',
           },
+          'social.zeppelin.cid': {
+            type: 'string',
+            format: 'cid',
+          },
+          'social.zeppelin.author': {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
           'social.zeppelin.value': {
             type: 'unknown',
             description: 'The record data itself.',
+          },
+          'social.zeppelin.indexedAt': {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -10709,7 +10729,15 @@ export const schemaDict = {
       },
       threadItemBlocked: {
         type: 'object',
-        required: ['author', 'social.zeppelin.post'],
+        required: [
+          'author',
+          'social.zeppelin.post',
+          'social.zeppelin.moreParents',
+          'social.zeppelin.moreReplies',
+          'social.zeppelin.opThread',
+          'social.zeppelin.hiddenByThreadgate',
+          'social.zeppelin.mutedByViewer',
+        ],
         properties: {
           author: {
             type: 'ref',
@@ -10718,6 +10746,31 @@ export const schemaDict = {
           'social.zeppelin.post': {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#postView',
+          },
+          'social.zeppelin.moreParents': {
+            type: 'boolean',
+            description:
+              'This post has more parents that were not present in the response. This is just a boolean, without the number of parents.',
+          },
+          'social.zeppelin.moreReplies': {
+            type: 'integer',
+            description:
+              'This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate.',
+          },
+          'social.zeppelin.opThread': {
+            type: 'boolean',
+            description:
+              'This post is part of a contiguous thread by the OP from the thread root. Many different OP threads can happen in the same thread.',
+          },
+          'social.zeppelin.hiddenByThreadgate': {
+            type: 'boolean',
+            description:
+              'The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread.',
+          },
+          'social.zeppelin.mutedByViewer': {
+            type: 'boolean',
+            description:
+              'This is by an account muted by the viewer requesting it.',
           },
         },
       },

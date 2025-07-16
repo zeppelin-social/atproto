@@ -117,8 +117,11 @@ export interface ViewBlocked {
   uri: string
   blocked: true
   author: AppBskyFeedDefs.BlockedAuthor
+  'social.zeppelin.cid': string
+  'social.zeppelin.author': AppBskyActorDefs.ProfileViewBasic
   /** The record data itself. */
-  'social.zeppelin.value'?: { [_ in string]: unknown }
+  'social.zeppelin.value': { [_ in string]: unknown }
+  'social.zeppelin.indexedAt': string
 }
 
 const hashViewBlocked = 'viewBlocked'
