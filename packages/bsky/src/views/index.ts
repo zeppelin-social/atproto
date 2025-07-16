@@ -2029,22 +2029,25 @@ export class Views {
     depth: number,
   ): {
     $type: 'app.bsky.embed.record#view'
-    record: $Typed<EmbedBlocked>
+    record: $Typed<EmbedBlocked> | undefined
   } {
-    const creator = creatorFromUri(uri)
     const postView = this.post(uri, state, depth)
+    const creator = creatorFromUri(uri)
     return {
       $type: 'app.bsky.embed.record#view',
-      record: {
-        $type: 'app.bsky.embed.record#viewBlocked',
-        uri,
-        blocked: true,
-        author: {
-          did: creator,
-          viewer: this.blockedProfileViewer(creator, state),
-        },
-        'social.zeppelin.value': postView,
-      },
+      record: !postView
+        ? undefined
+        : {
+            $type: 'app.bsky.embed.record#viewBlocked',
+            uri,
+            blocked: true,
+            author: {
+              did: creator,
+              viewer: this.blockedProfileViewer(creator, state),
+            },
+            'social.zeppelin.value': postView,
+            'social.zeppelin.author': postView.author,
+          },
     }
   }
 
