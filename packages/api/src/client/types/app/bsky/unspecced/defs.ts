@@ -188,6 +188,16 @@ export interface ThreadItemBlocked {
   $type?: 'app.bsky.unspecced.defs#threadItemBlocked'
   author: AppBskyFeedDefs.BlockedAuthor
   'social.zeppelin.post': AppBskyFeedDefs.PostView
+  /** This post has more parents that were not present in the response. This is just a boolean, without the number of parents. */
+  'social.zeppelin.moreParents': boolean
+  /** This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate. */
+  'social.zeppelin.moreReplies': number
+  /** This post is part of a contiguous thread by the OP from the thread root. Many different OP threads can happen in the same thread. */
+  'social.zeppelin.opThread': boolean
+  /** The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread. */
+  'social.zeppelin.hiddenByThreadgate': boolean
+  /** This is by an account muted by the viewer requesting it. */
+  'social.zeppelin.mutedByViewer': boolean
 }
 
 const hashThreadItemBlocked = 'threadItemBlocked'
