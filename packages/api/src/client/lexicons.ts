@@ -5978,7 +5978,13 @@ export const schemaDict = {
       },
       viewBlocked: {
         type: 'object',
-        required: ['uri', 'blocked', 'author'],
+        required: [
+          'uri',
+          'blocked',
+          'author',
+          'social.zeppelin.value',
+          'social.zeppelin.author',
+        ],
         properties: {
           uri: {
             type: 'string',
@@ -5995,6 +6001,10 @@ export const schemaDict = {
           'social.zeppelin.value': {
             type: 'unknown',
             description: 'The record data itself.',
+          },
+          'social.zeppelin.author': {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
           },
         },
       },

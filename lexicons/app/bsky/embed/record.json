@@ -77,7 +77,13 @@
     },
     "viewBlocked": {
       "type": "object",
-      "required": ["uri", "blocked", "author"],
+      "required": [
+        "uri",
+        "blocked",
+        "author",
+        "social.zeppelin.value",
+        "social.zeppelin.author"
+      ],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "blocked": { "type": "boolean", "const": true },
@@ -86,6 +92,10 @@
         "social.zeppelin.value": {
           "type": "unknown",
           "description": "The record data itself."
+        },
+        "social.zeppelin.author": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic"
         }
       }
     },
